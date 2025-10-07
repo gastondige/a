@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Veritas Investigations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a365d;
+            --secondary: #2d3748;
+            --accent: #e53e3e;
+        }
+
+        .sidebar {
+            background: var(--primary);
+            color: white;
+            min-height: 100vh;
+            position: fixed;
+            width: 250px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .contract-item {
+            border-left: 4px solid var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .status-pending { border-left-color: #f59e0b; }
+        .status-approved { border-left-color: #10b981; }
+        .status-rejected { border-left-color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="p-4">
+            <h4><i class="fas fa-search me-2"></i>Veritas Admin</h4>
+        </div>
+        <nav class="nav flex-column">
+          <a class="nav-link text-white" href="#dashboard" id="dashboard-link">
+              <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+          </a>
+          <a class="nav-link text-white" href="#contracts" id="contracts-link">
+              <i class="fas fa-file-contract me-2"></i>Contracts
+          </a>
+          <a class="nav-link text-white" href="#users" id="users-link">
+              <i class="fas fa-users me-2"></i>Users
+          </a>
+          <a class="nav-link text-white" href="#revenue" id="revenue-link">
+              <i class="fas fa-chart-bar me-2"></i>Revenue
+          </a>
+          <a class="nav-link text-white" href="/" target="_blank">
+              <i class="fas fa-external-link-alt me-2"></i>View Site
+          </a>
+          <a class="nav-link text-white" href="#" id="logout-link">
+              <i class="fas fa-sign-out-alt me-2"></i>Logout
+          </a>
+      </nav>
+    </div>
+
+    <div class="main-content">
+        <!-- Login Section -->
+        <div id="login-section" class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+            <div class="card shadow" style="width: 400px;">
+                <div class="card-body p-4">
+                    <h4 class="card-title text-center mb-4">Admin Login</h4>
+                    <form id="adminLoginForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="adminEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" id="adminPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" style="display: none;">
+            <h2 class="mb-4">Dashboard Overview</h2>
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div>Total Users</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalContracts">0</div>
+                        <div>Total Contracts</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingContracts">0</div>
+                        <div>Pending Contracts</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRevenue">$0</div>
+                        <div>Total Revenue</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Recent Contracts</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentContracts"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Recent Users</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentUsers"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contracts Section -->
+        <div id="contracts-section" style="display: none;">
+            <h2 class="mb-4">Contract Management</h2>
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <select class="form-select" id="contractFilter" onchange="loadContracts()">
+                                <option value="all">All Contracts</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="contractsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users-section" style="display: none;">
+            <h2 class="mb-4">User Management</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div id="usersList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Section -->
+        <div id="revenue-section" style="display: none;">
+            <h2 class="mb-4">Revenue Analytics</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Revenue by Service Type</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="revenueChart"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Quick Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="revenueStats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Modal -->
+    <div class="modal fade" id="contractModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Contract Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="contractDetails"></div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-success" id="approve-contract-btn">Approve</button>
+<button type="button" class="btn btn-danger" id="reject-contract-btn">Reject</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let currentContractId = null;
+
+        // Check if user is admin
+        async function checkAdminAuth() {
+            const token = localStorage.getItem('token');
+            console.log('Checking admin auth...', token);
+            if (!token) {
+              console.log('❌ No token found');
+                showLogin();
+                return;
+            }
+
+            try {
+              console.log('📡 Fetching user info...');
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+console.log('🔑 Auth response status:', response.status);
+
+                if (response.ok) {
+                    const user = await response.json();
+                     console.log('👤 User data:', user);
+                    if (user.role === 'admin') {
+                      console.log('✅ Admin access granted');
+                        currentUser = user;
+                        showSection('dashboard');
+                        loadDashboard();
+                    } else {
+                      console.log('❌ User is not admin');
+                        alert('Access denied. Admin role required.');
+                        window.location.href = '/';
+                    }
+                } else {
+                   console.log('❌ Auth failed');
+                    showLogin();
+                }
+            } catch (error) {
+              console.log('💥 Auth error:', error);
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-section').style.display = 'flex';
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('contracts-section').style.display = 'none';
+            document.getElementById('users-section').style.display = 'none';
+            document.getElementById('revenue-section').style.display = 'none';
+        }
+
+        function showSection(section) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = section === 'dashboard' ? 'block' : 'none';
+            document.getElementById('contracts-section').style.display = section === 'contracts' ? 'block' : 'none';
+            document.getElementById('users-section').style.display = section === 'users' ? 'block' : 'none';
+            document.getElementById('revenue-section').style.display = section === 'revenue' ? 'block' : 'none';
+
+            if (section === 'dashboard') loadDashboard();
+            if (section === 'contracts') loadContracts();
+            if (section === 'users') loadUsers();
+            if (section === 'revenue') loadRevenue();
+        }
+
+        // Admin Login
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const credentials = {
+                email: document.getElementById('adminEmail').value,
+                password: document.getElementById('adminPassword').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(credentials)
+                });
+
+                const result = await response.json();
+
+                if (result.token && result.user.role === 'admin') {
+                    localStorage.setItem('token', result.token);
+                    currentUser = result.user;
+                    showSection('dashboard');
+                    loadDashboard();
+                } else {
+                    alert('Admin access required or invalid credentials');
+                }
+            } catch (error) {
+                alert('Login failed');
+            }
+        });
+
+        // Load Dashboard
+        async function loadDashboard() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                }
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('totalUsers').textContent = data.stats.totalUsers;
+            document.getElementById('totalContracts').textContent = data.stats.totalContracts;
+            document.getElementById('pendingContracts').textContent = data.stats.pendingContracts;
+            document.getElementById('totalRevenue').textContent = '$' + (data.stats.totalRevenue || 0);
+
+            // Recent Contracts
+            const contractsHtml = data.recentContracts.map(contract => `
+                <div class="contract-item p-3 border rounded mb-2 status-${contract.status}">
+                    <div class="d-flex justify-content-between">
+                        <strong>${contract.contract_id}</strong>
+                        <span class="badge bg-${getStatusColor(contract.status)}">${contract.status}</span>
+                    </div>
+                    <div>${contract.service_type} - $${contract.price}</div>
+                    <small class="text-muted">${new Date(contract.created_at).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+            document.getElementById('recentContracts').innerHTML = contractsHtml;
+
+            // Recent Users
+            const usersHtml = data.recentUsers.map(user => `
+                <div class="p-3 border rounded mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>${user.name}</strong>
+                        <small class="text-muted">${user.ip_address}</small>
+                    </div>
+                    <div>${user.email}</div>
+                    <small class="text-muted">Joined: ${new Date(user.registration_date).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+            document.getElementById('recentUsers').innerHTML = usersHtml;
+        }
+
+        // Load Contracts
+        async function loadContracts() {
+            try {
+                const filter = document.getElementById('contractFilter').value;
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/admin/contracts?status=${filter === 'all' ? '' : filter}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayContracts(data.contracts);
+                }
+            } catch (error) {
+                console.error('Contracts load error:', error);
+            }
+        }
+
+        function displayContracts(contracts) {
+            const contractsHtml = contracts.map(contract => `
+                <div class="contract-item p-3 border rounded mb-2 status-${contract.status}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6>${contract.contract_id}</h6>
+                                <span class="badge bg-${getStatusColor(contract.status)}">${contract.status}</span>
+                            </div>
+                            <p class="mb-1"><strong>Service:</strong> ${contract.service_type}</p>
+                            <p class="mb-1"><strong>Client:</strong> ${contract.client_name} (${contract.client_email})</p>
+                            <p class="mb-1"><strong>Price:</strong> $${contract.price}</p>
+                            <p class="mb-1"><strong>User:</strong> ${contract.user_name} (${contract.user_email})</p>
+                            <p class="mb-1"><strong>IP:</strong> ${contract.ip_address}</p>
+                            <small class="text-muted">Submitted: ${new Date(contract.created_at).toLocaleString()}</small>
+                        </div>
+                        <div class="ms-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewContract(${contract.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('contractsList').innerHTML = contractsHtml;
+        }
+
+        // Load Users
+        async function loadUsers() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayUsers(data.users);
+                }
+            } catch (error) {
+                console.error('Users load error:', error);
+            }
+        }
+
+        function displayUsers(users) {
+            const usersHtml = users.map(user => `
+                <div class="p-3 border rounded mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${user.name}</h6>
+                            <p class="mb-1 text-muted">${user.email}</p>
+                            <small class="text-muted">IP: ${user.ip_address} | Role: ${user.role} | Joined: ${new Date(user.registration_date).toLocaleDateString()}</small>
+                        </div>
+                        <div>
+                            <span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-secondary'}">${user.role}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('usersList').innerHTML = usersHtml;
+        }
+
+        // Load Revenue
+        async function loadRevenue() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/revenue', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayRevenue(data);
+                }
+            } catch (error) {
+                console.error('Revenue load error:', error);
+            }
+        }
+
+        function displayRevenue(data) {
+            // Simple revenue display - could be enhanced with charts
+            const revenueHtml = `
+                <div class="mb-4">
+                    <h4>Total Revenue: $${data.totalRevenue}</h4>
+                </div>
+                <div class="row">
+                    ${data.revenueByService.map(service => `
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 border rounded">
+                                <h6>${service._id}</h6>
+                                <p class="mb-1">Revenue: $${service.total}</p>
+                                <p class="mb-0">Contracts: ${service.count}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            document.getElementById('revenueChart').innerHTML = revenueHtml;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'warning',
+                'approved': 'success',
+                'rejected': 'danger',
+                'in-progress': 'info',
+                'completed': 'primary'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        async function viewContract(contractId) {
+            currentContractId = contractId;
+            const modal = new bootstrap.Modal(document.getElementById('contractModal'));
+            modal.show();
+        }
+
+        async function approveContract() {
+            if (!currentContractId) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/admin/contracts/${currentContractId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'approved' })
+                });
+
+                if (response.ok) {
+                    alert('Contract approved!');
+                    loadContracts();
+                    loadDashboard();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('contractModal'));
+                    modal.hide();
+                }
+            } catch (error) {
+                alert('Error approving contract');
+            }
+        }
+
+        async function rejectContract() {
+            if (!currentContractId) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/admin/contracts/${currentContractId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'rejected' })
+                });
+
+                if (response.ok) {
+                    alert('Contract rejected!');
+                    loadContracts();
+                    loadDashboard();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('contractModal'));
+                    modal.hide();
+                }
+            } catch (error) {
+                alert('Error rejecting contract');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Initialize
+        checkAdminAuth();
+
+        // Add event listeners for navigation
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('dashboard-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('dashboard');
+    });
+
+    document.getElementById('contracts-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('contracts');
+    });
+
+    document.getElementById('users-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('users');
+    });
+
+    document.getElementById('revenue-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSection('revenue');
+    });
+
+    document.getElementById('logout-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+    });
+});
+
+document.getElementById('approve-contract-btn').addEventListener('click', approveContract);
+document.getElementById('reject-contract-btn').addEventListener('click', rejectContract);
+    </script>
+</body>
+</html>
